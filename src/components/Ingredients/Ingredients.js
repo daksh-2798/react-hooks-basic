@@ -14,11 +14,22 @@ const ingredientReducer = (currentIngredient,action) => {
   }
 }
 
+const httpReducer = (currHttpState , action) => {
+  switch(action.type){
+    case 'SEND' : return {loading : true , error : null};
+    case 'RESPONSE': return {...currHttpState , loading : false};
+    case 'ERROR' : return {loading : false , error : action.errorMessage};
+    case 'CLEAR' : return {...currHttpState , error : null};
+    default : throw new Error('SHOULD NOT REACH HERE');
+  }
+}
+
 const Ingredients = () => {
   const[userIngredient,dispatch] = useReducer(ingredientReducer,[]);
+  const[httpState,httpDispatch] = useReducer(httpReducer , {loading : false , error : null})
   //const [userIngredient,setUserIngredient] = useState([]);
-  const [isLoading,setIsLoading] = useState(false);
-  const [error,setError] = useState();
+  //const [isLoading,setIsLoading] = useState(false);
+  //const [error,setError] = useState();
 
   // useEffect(() => {
   //   fetch('https://reacts-hoks-update-default-rtdb.firebaseio.com/ingredient.json').then(
@@ -39,13 +50,15 @@ const Ingredients = () => {
   // },[]);
 
   const addIngredientHandler = ingredient => {
-    setIsLoading(true);
+    //setIsLoading(true);
+    httpDispatch({type : 'SEND'});
     fetch('https://reacts-hoks-update-default-rtdb.firebaseio.com/ingredient.json',{
     method : 'POST',
     body : JSON.stringify(ingredient),
     headers : {'Contetnt-Type' : 'application/json'}
   }).then(reponse => {
-    setIsLoading(false);
+    //setIsLoading(false);
+    httpDispatch({type : 'RESPONSE'});
     return reponse.json();
   }).then( responseData => {
     // setUserIngredient(prevIngredient => 
@@ -56,8 +69,9 @@ const Ingredients = () => {
       type : 'ADD',
       ingredient : {id : responseData.name , ...ingredient}
     })}).catch(error => {
-      setError('Something Went Wrong!!');
-      setIsLoading(false);
+      //setError('Something Went Wrong!!');
+      //setIsLoading(false);
+      httpDispatch({type : 'ERROR' , errorMessage : 'Something Went Wrong!!'});
     });
   };
   const setFilteredIngredient = useCallback(filteredIngredient => {
@@ -68,12 +82,14 @@ const Ingredients = () => {
    });
   },[]);
   const removeIngredientHandler = ingredientId => {
-    setIsLoading(true);
+    //setIsLoading(true);
+    httpDispatch({type : 'SEND'});
     fetch(`https://reacts-hoks-update-default-rtdb.firebaseio.com/ingredient/${ingredientId}.json`,
     {
       method : 'DELETE'
     }).then(reponse => {
-      setIsLoading(false);
+      //setIsLoading(false);
+      httpDispatch({type : 'RESPONSE'});
       // setUserIngredient(prevIngredients =>
       //   prevIngredients.filter(ingredient => ingredient.id !== ingredientId)      
       // );
@@ -82,20 +98,22 @@ const Ingredients = () => {
         id : ingredientId
       })
     }).catch(error => {
-      setError('Something Went Wrong!!');
-      setIsLoading(false);
+      //setError('Something Went Wrong!!');
+      //setIsLoading(false);
+      httpDispatch({type : 'ERROR' , errorMessage : 'Something Went Wrong!!'});
     });
   };
 
   const clearError = () => {
-    setError(null);
+   // setError(null);
+   httpDispatch({type : 'CLEAR'});
     
   } 
 
   return (
     <div className="App">
-      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
-      <IngredientForm onAddIngredient = {addIngredientHandler} loading={isLoading} />
+      {httpState.error && (<ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>)}
+      <IngredientForm onAddIngredient = {addIngredientHandler} loading={httpState.loading} />
 
       <section>
         <Search onLoadIngredient = {setFilteredIngredient} />
