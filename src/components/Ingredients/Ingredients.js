@@ -1,13 +1,22 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useReducer, useState } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import Search from './Search';
 import ErrorModal from '../UI/ErrorModal';
 
-const Ingredients = () => {
+const ingredientReducer = (currentIngredient,action) => {
+  switch(action.type){
+    case 'SET': return action.ingredient;
+    case 'ADD' : return [...currentIngredient , action.ingredient];
+    case 'DELETE' : return currentIngredient.filter(ingredient => ingredient.id !== action.id);
+    default : throw new Error('SHOULD NOT REACH HERE');
+  }
+}
 
-  const [userIngredient,setUserIngredient] = useState([]);
+const Ingredients = () => {
+  const[userIngredient,dispatch] = useReducer(ingredientReducer,[]);
+  //const [userIngredient,setUserIngredient] = useState([]);
   const [isLoading,setIsLoading] = useState(false);
   const [error,setError] = useState();
 
@@ -39,17 +48,24 @@ const Ingredients = () => {
     setIsLoading(false);
     return reponse.json();
   }).then( responseData => {
-    setUserIngredient(prevIngredient => 
-        [...prevIngredient , 
-        { id : responseData.name , ...ingredient }
-      ])
-    }).catch(error => {
+    // setUserIngredient(prevIngredient => 
+    //     [...prevIngredient , 
+    //     { id : responseData.name , ...ingredient }
+    //   ])
+    dispatch({
+      type : 'ADD',
+      ingredient : {id : responseData.name , ...ingredient}
+    })}).catch(error => {
       setError('Something Went Wrong!!');
       setIsLoading(false);
     });
   };
   const setFilteredIngredient = useCallback(filteredIngredient => {
-    setUserIngredient(filteredIngredient);
+   // setUserIngredient(filteredIngredient);
+   dispatch({
+     type : 'SET',
+     ingredient : filteredIngredient
+   });
   },[]);
   const removeIngredientHandler = ingredientId => {
     setIsLoading(true);
@@ -58,10 +74,13 @@ const Ingredients = () => {
       method : 'DELETE'
     }).then(reponse => {
       setIsLoading(false);
-      setUserIngredient(prevIngredients =>
-        prevIngredients.filter(ingredient => ingredient.id !== ingredientId)
-        
-      );
+      // setUserIngredient(prevIngredients =>
+      //   prevIngredients.filter(ingredient => ingredient.id !== ingredientId)      
+      // );
+      dispatch({
+        type : 'DELETE',
+        id : ingredientId
+      })
     }).catch(error => {
       setError('Something Went Wrong!!');
       setIsLoading(false);
