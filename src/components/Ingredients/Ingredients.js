@@ -9,10 +9,18 @@ const Ingredients = () => {
   const [userIngredient,setUserIngredient] = useState([]);
 
   const addIngredientHandler = ingredient => {
+    fetch('https://reacts-hoks-update-default-rtdb.firebaseio.com/ingredient.json',{
+    method : 'POST',
+    body : JSON.stringify(ingredient),
+    headers : {'Contetnt-Type' : 'application/json'}
+  }).then(reponse => {
+    return reponse.json();
+  }).then( responseData => {
     setUserIngredient(prevIngredient => 
         [...prevIngredient , 
-        { id : Math.random.toString() , ...ingredient }
-      ]);
+        { id : responseData.name , ...ingredient }
+      ])
+    });
   };
 
   return (
