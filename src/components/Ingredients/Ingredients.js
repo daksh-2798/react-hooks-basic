@@ -1,4 +1,4 @@
-import React, { useCallback, useReducer, useState } from 'react';
+import React, { useCallback, useMemo, useReducer, useState } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -49,7 +49,7 @@ const Ingredients = () => {
   //   });
   // },[]);
 
-  const addIngredientHandler = ingredient => {
+  const addIngredientHandler = useCallback(ingredient => {
     //setIsLoading(true);
     httpDispatch({type : 'SEND'});
     fetch('https://reacts-hoks-update-default-rtdb.firebaseio.com/ingredient.json',{
@@ -73,7 +73,7 @@ const Ingredients = () => {
       //setIsLoading(false);
       httpDispatch({type : 'ERROR' , errorMessage : 'Something Went Wrong!!'});
     });
-  };
+  },[]);
   const setFilteredIngredient = useCallback(filteredIngredient => {
    // setUserIngredient(filteredIngredient);
    dispatch({
@@ -81,7 +81,7 @@ const Ingredients = () => {
      ingredient : filteredIngredient
    });
   },[]);
-  const removeIngredientHandler = ingredientId => {
+  const removeIngredientHandler = useCallback(ingredientId => {
     //setIsLoading(true);
     httpDispatch({type : 'SEND'});
     fetch(`https://reacts-hoks-update-default-rtdb.firebaseio.com/ingredient/${ingredientId}.json`,
@@ -102,13 +102,20 @@ const Ingredients = () => {
       //setIsLoading(false);
       httpDispatch({type : 'ERROR' , errorMessage : 'Something Went Wrong!!'});
     });
-  };
+  },[]);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
    // setError(null);
    httpDispatch({type : 'CLEAR'});
     
-  } 
+  },[]);
+
+
+  // const ingredientList = useMemo(() => {    if we use useMemo instead of react.memo
+  //   return (
+  //     <IngredientList ingredients={userIngredient} onRemoveItem = {removeIngredientHandler} />
+  //   );
+  // },[userIngredient,removeIngredientHandler]);
 
   return (
     <div className="App">
@@ -118,6 +125,7 @@ const Ingredients = () => {
       <section>
         <Search onLoadIngredient = {setFilteredIngredient} />
         <IngredientList ingredients={userIngredient} onRemoveItem = {removeIngredientHandler} />
+        {/* {ingredientList} if we use useMemo */}
       </section>
     </div>
   );
